@@ -1,6 +1,9 @@
 package com.example.weatherapp_ramide
 
 import android.os.Bundle
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,28 +21,41 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.ContextCompat
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.weatherapp_ramide.ui.CityDialog
 import com.example.weatherapp_ramide.ui.nav.BottomNavBar
 import com.example.weatherapp_ramide.ui.nav.BottomNavItem
 import com.example.weatherapp_ramide.ui.nav.MainNavHost
+import com.example.weatherapp_ramide.ui.nav.Route
 import com.example.weatherapp_ramide.ui.theme.WeatherAPPRamideTheme
+import com.google.android.gms.maps.MapsInitializer
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        try {
+            MapsInitializer.initialize(applicationContext, MapsInitializer.Renderer.LEGACY, null)
+        } catch (exception: RuntimeException) {
+            Log.e("MainActivity", "Falha ao inicializar o Google Maps.", exception)
+        }
         val viewModel: MainViewModel by viewModels()
         setContent {
             MainScreen(
                 viewModel = viewModel,
-                onExit = { finish() }
+                onExit = { Firebase.auth.signOut() }
             )
         }
     }
@@ -54,6 +70,14 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
     var showDialog by remember { mutableStateOf(false) }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    val showAddButton = currentDestination?.hasRoute<Route.List>() == true
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = {}
+    )
+    val context = androidx.compose.ui.platform.LocalContext.current
     val items = listOf(
         BottomNavItem.HomeButton,
         BottomNavItem.ListButton,
@@ -61,6 +85,18 @@ fun MainScreen(
     )
 
     WeatherAPPRamideTheme {
+        LaunchedEffect(Unit) {
+            val hasFineLocationPermission =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (!hasFineLocationPermission) {
+                launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+
         if (showDialog) {
             CityDialog(
                 onDismiss = { showDialog = false },
@@ -92,8 +128,10 @@ fun MainScreen(
                 BottomNavBar(navController = navController, items = items)
             },
             floatingActionButton = {
-                FloatingActionButton(onClick = { showDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Adicionar")
+                if (showAddButton) {
+                    FloatingActionButton(onClick = { showDialog = true }) {
+                        Icon(Icons.Default.Add, contentDescription = "Adicionar")
+                    }
                 }
             }
         ) { innerPadding ->

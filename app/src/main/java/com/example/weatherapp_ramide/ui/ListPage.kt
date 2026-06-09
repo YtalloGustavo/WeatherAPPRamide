@@ -1,8 +1,6 @@
 package com.example.weatherapp_ramide.ui
 
-import android.app.Activity
 import android.widget.Toast
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,7 +73,7 @@ fun ListPage(
     modifier: Modifier = Modifier
 ) {
     val cityList = viewModel.cities
-    val activity = LocalActivity.current as Activity
+    val context = LocalContext.current
 
     Column(
         modifier = modifier
@@ -92,12 +91,12 @@ fun ListPage(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(cityList, key = { it.name }) { city ->
+            items(cityList, key = { it.id }) { city ->
                 CityItem(
                     city = city,
                     onClose = {
                         Toast.makeText(
-                            activity,
+                            context,
                             "${city.name} removida dos favoritos",
                             Toast.LENGTH_SHORT
                         ).show()
@@ -105,7 +104,7 @@ fun ListPage(
                     },
                     onClick = {
                         Toast.makeText(
-                            activity,
+                            context,
                             "Cidade selecionada: ${city.name}",
                             Toast.LENGTH_SHORT
                         ).show()

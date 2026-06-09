@@ -25,12 +25,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherapp_ramide.ui.components.DataField
 import com.example.weatherapp_ramide.ui.components.PasswordField
 import com.example.weatherapp_ramide.ui.theme.WeatherAPPRamideTheme
+import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.auth
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,7 +55,8 @@ fun LoginPage(modifier: Modifier = Modifier) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
 
-    val activity = LocalActivity.current as Activity
+    val activity = LocalActivity.current as? Activity
+    val context = LocalContext.current
     val fieldModifier = Modifier.fillMaxWidth(0.9f)
 
     Column(
@@ -92,14 +97,28 @@ fun LoginPage(modifier: Modifier = Modifier) {
         ) {
             Button(
                 onClick = {
-                    Toast.makeText(activity, "Login OK!", Toast.LENGTH_LONG).show()
-                    activity.startActivity(
-                        Intent(activity, MainActivity::class.java).setFlags(
-                            Intent.FLAG_ACTIVITY_SINGLE_TOP
-                        )
-                    )
+                    if (FirebaseApp.getApps(context).isEmpty()) {
+                        Toast.makeText(
+                            context,
+                            "Configure o Firebase antes de fazer login.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@Button
+                    }
+
+                    activity?.let {
+                        Firebase.auth.signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener(it) { task ->
+                                val message = if (task.isSuccessful) {
+                                    "Login OK!"
+                                } else {
+                                    "Login FALHOU!"
+                                }
+                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                            }
+                    }
                 },
-                enabled = email.isNotEmpty() && password.isNotEmpty()
+                enabled = activity != null && email.isNotEmpty() && password.isNotEmpty()
             ) {
                 Text("Login")
             }
@@ -118,7 +137,7 @@ fun LoginPage(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-                activity.startActivity(Intent(activity, RegisterActivity::class.java))
+                activity?.startActivity(Intent(context, RegisterActivity::class.java))
             }
         ) {
             Text("Criar conta")

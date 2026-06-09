@@ -24,12 +24,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherapp_ramide.ui.components.DataField
 import com.example.weatherapp_ramide.ui.components.PasswordField
 import com.example.weatherapp_ramide.ui.theme.WeatherAPPRamideTheme
+import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.auth
 
 class RegisterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,7 +56,8 @@ fun RegisterPage(modifier: Modifier = Modifier) {
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
 
-    val activity = LocalActivity.current as Activity
+    val activity = LocalActivity.current as? Activity
+    val context = LocalContext.current
     val fieldModifier = Modifier.fillMaxWidth(0.9f)
 
     Column(
@@ -111,10 +116,29 @@ fun RegisterPage(modifier: Modifier = Modifier) {
         ) {
             Button(
                 onClick = {
-                    Toast.makeText(activity, "Registro realizado!", Toast.LENGTH_LONG).show()
-                    activity.finish()
+                    if (FirebaseApp.getApps(context).isEmpty()) {
+                        Toast.makeText(
+                            context,
+                            "Configure o Firebase antes de registrar.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@Button
+                    }
+
+                    activity?.let {
+                        Firebase.auth.createUserWithEmailAndPassword(email, password)
+                            .addOnCompleteListener(it) { task ->
+                                val message = if (task.isSuccessful) {
+                                    "Registro OK!"
+                                } else {
+                                    "Registro FALHOU!"
+                                }
+                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                            }
+                    }
                 },
-                enabled = name.isNotEmpty() &&
+                enabled = activity != null &&
+                    name.isNotEmpty() &&
                     email.isNotEmpty() &&
                     password.isNotEmpty() &&
                     confirmPassword.isNotEmpty() &&
