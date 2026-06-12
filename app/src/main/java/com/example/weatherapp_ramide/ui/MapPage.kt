@@ -55,7 +55,6 @@ fun MapPage(
                 )
             }
         }
-
         Marker(
             state = recife,
             title = "Recife",
