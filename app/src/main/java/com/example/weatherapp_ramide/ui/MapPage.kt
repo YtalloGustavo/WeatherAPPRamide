@@ -41,7 +41,7 @@ fun MapPage(
         modifier = modifier.fillMaxSize(),
         cameraPositionState = camPosState,
         onMapClick = {
-            viewModel.add("Cidade@${it.latitude}:${it.longitude}", location = it)
+            viewModel.add(viewModel.nextCityName(), location = it)
         },
         properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
         uiSettings = MapUiSettings(myLocationButtonEnabled = hasLocationPermission)

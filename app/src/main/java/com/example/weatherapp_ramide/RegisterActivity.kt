@@ -34,6 +34,9 @@ import com.example.weatherapp_ramide.ui.theme.WeatherAPPRamideTheme
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth
+import com.example.weatherapp_ramide.db.fb.FBDatabase
+import com.example.weatherapp_ramide.model.User
+import com.example.weatherapp_ramide.db.fb.toFBUser
 
 class RegisterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -129,7 +132,12 @@ fun RegisterPage(modifier: Modifier = Modifier) {
                         Firebase.auth.createUserWithEmailAndPassword(email, password)
                             .addOnCompleteListener(it) { task ->
                                 val message = if (task.isSuccessful) {
-                                    "Registro OK!"
+                                    try {
+                                        FBDatabase().register(User(name, email).toFBUser())
+                                        "Registro OK!"
+                                    } catch (e: Exception) {
+                                        "Erro ao salvar no banco!"
+                                    }
                                 } else {
                                     "Registro FALHOU!"
                                 }

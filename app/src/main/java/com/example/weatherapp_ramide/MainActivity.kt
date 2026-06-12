@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -51,8 +51,11 @@ class MainActivity : ComponentActivity() {
         } catch (exception: RuntimeException) {
             Log.e("MainActivity", "Falha ao inicializar o Google Maps.", exception)
         }
-        val viewModel: MainViewModel by viewModels()
         setContent {
+            val fbDB = remember { com.example.weatherapp_ramide.db.fb.FBDatabase() }
+            val viewModel: MainViewModel = viewModel(
+                factory = MainViewModelFactory(fbDB)
+            )
             MainScreen(
                 viewModel = viewModel,
                 onExit = { Firebase.auth.signOut() }
@@ -113,7 +116,10 @@ fun MainScreen(
             modifier = modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = { Text("Bem-vindo/a!") },
+                    title = {
+                        val name = viewModel.user?.name ?: "[carregando...]"
+                        Text("Bem-vindo/a! $name")
+                    },
                     actions = {
                         IconButton(onClick = onExit) {
                             Icon(
@@ -149,7 +155,7 @@ fun MainScreen(
 @Composable
 fun MainScreenPreview() {
     MainScreen(
-        viewModel = MainViewModel(),
+        viewModel = MainViewModel(com.example.weatherapp_ramide.db.fb.FBDatabase()),
         onExit = {}
     )
 }
