@@ -126,7 +126,6 @@ class MainViewModel(
 
     override fun onCityUpdated(city: FBCity) {
         val updatedCity = city.toCity()
-        _cities.remove(city.name)
         _cities[city.name!!] = updatedCity
         monitor.updateCity(updatedCity)
     }
@@ -134,6 +133,8 @@ class MainViewModel(
     override fun onCityRemoved(city: FBCity) {
         val removedCity = city.toCity()
         _cities.remove(city.name)
+        _weather.remove(city.name)
+        _forecast.remove(city.name)
         monitor.cancelCity(removedCity)
     }
 }

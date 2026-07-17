@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,7 +64,8 @@ fun HomePage(
                     Spacer(modifier = modifier.size(12.dp))
                     val city = viewModel.cities.find { it.name == viewModel.city }
                     val icon = if (city?.isMonitored == true)
-                        Icons.Filled.Notifications else Icons.Outlined.Notifications
+                        R.drawable.ic_notifications_filled
+                    else R.drawable.ic_notifications_outlined
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = viewModel.city ?: "Selecione uma cidade...",
@@ -76,7 +74,7 @@ fun HomePage(
                         if (city != null) {
                             Spacer(modifier = Modifier.size(12.dp))
                             Icon(
-                                imageVector = icon,
+                                painter = painterResource(icon),
                                 contentDescription = "Monitorada?",
                                 modifier = Modifier
                                     .size(32.dp)
@@ -106,7 +104,7 @@ fun HomePage(
 
             viewModel.forecast(viewModel.city!!)?.let { forecasts ->
                 LazyColumn {
-                    items(items = forecasts) { forecast ->
+                    items(items = forecasts, key = { it.date }) { forecast ->
                         ForecastItem(forecast, onClick = { })
                     }
                 }

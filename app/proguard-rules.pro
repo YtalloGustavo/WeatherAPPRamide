@@ -1,21 +1,30 @@
 # Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --- General: keep line numbers for stack traces ---
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes RuntimeVisibleAnnotations
+-keepattributes RuntimeVisibleParameterAnnotations
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# --- Retrofit ---
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# --- Gson (serialization/deserialization of API models by reflection) ---
+-keep class com.example.weatherapp_ramide.api.** { *; }
+-keep class com.google.gson.** { *; }
+-keepattributes EnclosingMethod
+
+# --- Firebase / Firestore (models deserialized by reflection) ---
+-keep class com.example.weatherapp_ramide.db.fb.** { *; }
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+
+# --- Coil ---
+-dontwarn coil.**
+-keep class coil.** { *; }

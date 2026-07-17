@@ -10,9 +10,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -144,7 +141,9 @@ fun MainScreen(
                     actions = {
                         IconButton(onClick = onExit) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                painter = androidx.compose.ui.res.painterResource(
+                                    com.example.weatherapp_ramide.R.drawable.ic_exit_to_app
+                                ),
                                 contentDescription = "Sair"
                             )
                         }
@@ -157,7 +156,12 @@ fun MainScreen(
             floatingActionButton = {
                 if (showAddButton) {
                     FloatingActionButton(onClick = { showDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Adicionar")
+                        Icon(
+                            painter = androidx.compose.ui.res.painterResource(
+                                com.example.weatherapp_ramide.R.drawable.ic_add
+                            ),
+                            contentDescription = "Adicionar"
+                        )
                     }
                 }
             }

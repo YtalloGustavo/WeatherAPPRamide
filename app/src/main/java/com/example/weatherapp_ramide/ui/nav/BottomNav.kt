@@ -1,19 +1,16 @@
 package com.example.weatherapp_ramide.ui.nav
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.weatherapp_ramide.MainViewModel
+import com.example.weatherapp_ramide.R
 import kotlinx.serialization.Serializable
 
 sealed interface Route {
@@ -29,12 +26,12 @@ sealed interface Route {
 
 sealed class BottomNavItem(
     val title: String,
-    val icon: ImageVector,
+    val icon: Int,
     val route: Route
 ) {
-    data object HomeButton : BottomNavItem("Inicio", Icons.Default.Home, Route.Home)
-    data object ListButton : BottomNavItem("Favoritos", Icons.Default.Favorite, Route.List)
-    data object MapButton : BottomNavItem("Mapa", Icons.Default.LocationOn, Route.Map)
+    data object HomeButton : BottomNavItem("Inicio", R.drawable.ic_home, Route.Home)
+    data object ListButton : BottomNavItem("Favoritos", R.drawable.ic_favorite, Route.List)
+    data object MapButton : BottomNavItem("Mapa", R.drawable.ic_location_on, Route.Map)
 }
 
 @Composable
@@ -47,7 +44,10 @@ fun BottomNavBar(
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
-                    Icon(imageVector = item.icon, contentDescription = item.title)
+                    Icon(
+                        painter = painterResource(item.icon),
+                        contentDescription = item.title
+                    )
                 },
                 label = { Text(text = item.title, fontSize = 12.sp) },
                 alwaysShowLabel = true,

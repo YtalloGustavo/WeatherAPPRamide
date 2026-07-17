@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -69,14 +65,16 @@ fun CityItem(
             )
         }
         Icon(
-            imageVector = if (city.isMonitored) Icons.Filled.Notifications
-            else Icons.Outlined.Notifications,
+            painter = painterResource(
+                if (city.isMonitored) R.drawable.ic_notifications_filled
+                else R.drawable.ic_notifications_outlined
+            ),
             contentDescription = "Monitorada?",
             modifier = modifier.size(28.dp)
         )
         IconButton(onClick = onClose) {
             Icon(
-                imageVector = Icons.Filled.Close,
+                painter = painterResource(id = R.drawable.ic_close),
                 contentDescription = "Remover cidade"
             )
         }
