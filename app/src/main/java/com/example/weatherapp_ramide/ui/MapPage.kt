@@ -5,9 +5,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat.getDrawable
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.scale
 import com.example.weatherapp_ramide.MainViewModel
+import com.example.weatherapp_ramide.R
 import com.example.weatherapp_ramide.model.Weather
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -43,11 +48,22 @@ fun MapPage(
         uiSettings = MapUiSettings(myLocationButtonEnabled = hasLocationPermission)
     ) {
         viewModel.cities.forEach { city ->
-            city.location?.let { location ->
+            if (city.location != null) {
+                val location = city.location!!
                 val weather = viewModel.weather(city.name)
-                val desc = if (weather == Weather.LOADING) "Carregando clima..." else weather.desc
+
+                val image = weather.bitmap
+                    ?: getDrawable(context, R.drawable.loading)!!.toBitmap()
+
+                val marker = BitmapDescriptorFactory
+                    .fromBitmap(image.scale(120, 120))
+
+                val desc = if (weather == Weather.LOADING)
+                    "Carregando clima..." else weather.desc
+
                 Marker(
                     state = MarkerState(position = location),
+                    icon = marker,
                     title = city.name,
                     snippet = desc
                 )

@@ -51,7 +51,9 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             val fbDB = remember { com.example.weatherapp_ramide.db.fb.FBDatabase() }
-            val weatherService = remember { com.example.weatherapp_ramide.api.WeatherService() }
+            val weatherService = remember {
+                com.example.weatherapp_ramide.api.WeatherService(this@MainActivity)
+            }
             val viewModel: MainViewModel = viewModel(
                 factory = MainViewModelFactory(fbDB, weatherService)
             )
@@ -162,10 +164,11 @@ fun MainScreen(
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
+    val context = androidx.compose.ui.platform.LocalContext.current
     MainScreen(
         viewModel = MainViewModel(
             com.example.weatherapp_ramide.db.fb.FBDatabase(),
-            com.example.weatherapp_ramide.api.WeatherService()
+            com.example.weatherapp_ramide.api.WeatherService(context)
         ),
         onExit = {}
     )
