@@ -53,8 +53,9 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             val fbDB = remember { com.example.weatherapp_ramide.db.fb.FBDatabase() }
+            val weatherService = remember { com.example.weatherapp_ramide.api.WeatherService() }
             val viewModel: MainViewModel = viewModel(
-                factory = MainViewModelFactory(fbDB)
+                factory = MainViewModelFactory(fbDB, weatherService)
             )
             MainScreen(
                 viewModel = viewModel,
@@ -105,7 +106,7 @@ fun MainScreen(
                 onDismiss = { showDialog = false },
                 onConfirm = { city ->
                     if (city.isNotBlank()) {
-                        viewModel.add(city)
+                        viewModel.addCity(city)
                     }
                     showDialog = false
                 }
@@ -155,7 +156,10 @@ fun MainScreen(
 @Composable
 fun MainScreenPreview() {
     MainScreen(
-        viewModel = MainViewModel(com.example.weatherapp_ramide.db.fb.FBDatabase()),
+        viewModel = MainViewModel(
+            com.example.weatherapp_ramide.db.fb.FBDatabase(),
+            com.example.weatherapp_ramide.api.WeatherService()
+        ),
         onExit = {}
     )
 }
