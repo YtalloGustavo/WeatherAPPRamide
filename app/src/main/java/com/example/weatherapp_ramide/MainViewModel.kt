@@ -16,12 +16,14 @@ import com.example.weatherapp_ramide.model.City
 import com.example.weatherapp_ramide.model.Forecast
 import com.example.weatherapp_ramide.model.User
 import com.example.weatherapp_ramide.model.Weather
+import com.example.weatherapp_ramide.monitor.ForecastMonitor
 import com.example.weatherapp_ramide.ui.nav.Route
 import com.google.android.gms.maps.model.LatLng
 
 class MainViewModel(
     private val db: FBDatabase,
-    private val service: WeatherService
+    private val service: WeatherService,
+    private val monitor: ForecastMonitor
 ) : ViewModel(), FBDatabase.Listener {
 
     private val _cities = mutableStateMapOf<String, City>()
@@ -51,6 +53,10 @@ class MainViewModel(
 
     fun remove(city: City) {
         db.remove(city.toFBCity())
+    }
+
+    fun update(city: City) {
+        db.update(city.toFBCity())
     }
 
     fun addCity(name: String) {
@@ -109,31 +115,38 @@ class MainViewModel(
     }
 
     override fun onUserSignOut() {
-        // TODO("Not yet implemented")
+        monitor.cancelAll()
     }
 
     override fun onCityAdded(city: FBCity) {
-        _cities[city.name!!] = city.toCity()
+        val newCity = city.toCity()
+        _cities[city.name!!] = newCity
+        monitor.updateCity(newCity)
     }
 
     override fun onCityUpdated(city: FBCity) {
+        val updatedCity = city.toCity()
         _cities.remove(city.name)
-        _cities[city.name!!] = city.toCity()
+        _cities[city.name!!] = updatedCity
+        monitor.updateCity(updatedCity)
     }
 
     override fun onCityRemoved(city: FBCity) {
+        val removedCity = city.toCity()
         _cities.remove(city.name)
+        monitor.cancelCity(removedCity)
     }
 }
 
 class MainViewModelFactory(
     private val db: FBDatabase,
-    private val service: WeatherService
+    private val service: WeatherService,
+    private val monitor: ForecastMonitor
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(db, service) as T
+            return MainViewModel(db, service, monitor) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,9 +55,20 @@ class MainActivity : ComponentActivity() {
             val weatherService = remember {
                 com.example.weatherapp_ramide.api.WeatherService(this@MainActivity)
             }
+            val monitor = remember {
+                com.example.weatherapp_ramide.monitor.ForecastMonitor(this@MainActivity)
+            }
             val viewModel: MainViewModel = viewModel(
-                factory = MainViewModelFactory(fbDB, weatherService)
+                factory = MainViewModelFactory(fbDB, weatherService, monitor)
             )
+            DisposableEffect(Unit) {
+                val listener = androidx.core.util.Consumer<android.content.Intent> { intent ->
+                    viewModel.city = intent.getStringExtra("city")
+                    viewModel.page = Route.Home
+                }
+                this@MainActivity.addOnNewIntentListener(listener)
+                onDispose { this@MainActivity.removeOnNewIntentListener(listener) }
+            }
             MainScreen(
                 viewModel = viewModel,
                 onExit = { Firebase.auth.signOut() }
@@ -96,6 +108,16 @@ fun MainScreen(
 
             if (!hasFineLocationPermission) {
                 launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+
+            val hasNotifPermission =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (!hasNotifPermission) {
+                launcher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
             }
         }
 
@@ -168,7 +190,8 @@ fun MainScreenPreview() {
     MainScreen(
         viewModel = MainViewModel(
             com.example.weatherapp_ramide.db.fb.FBDatabase(),
-            com.example.weatherapp_ramide.api.WeatherService(context)
+            com.example.weatherapp_ramide.api.WeatherService(context),
+            com.example.weatherapp_ramide.monitor.ForecastMonitor(context)
         ),
         onExit = {}
     )
