@@ -27,14 +27,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherapp_ramide.MainViewModel
 import com.example.weatherapp_ramide.model.City
+import com.example.weatherapp_ramide.model.Weather
+import com.example.weatherapp_ramide.ui.nav.Route
 
 @Composable
 fun CityItem(
     city: City,
+    weather: Weather,
     onClick: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val desc = if (weather == Weather.LOADING) "Carregando clima..." else weather.desc
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -47,14 +51,14 @@ fun CityItem(
             contentDescription = null
         )
         Spacer(modifier = Modifier.size(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = modifier.weight(1f)) {
             Text(
                 text = city.name,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = city.weather ?: "Carregando clima...",
+                text = desc,
                 fontSize = 16.sp
             )
         }
@@ -91,9 +95,10 @@ fun ListPage(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(cityList, key = { it.id }) { city ->
+            items(cityList, key = { it.name }) { city ->
                 CityItem(
                     city = city,
+                    weather = viewModel.weather(city.name),
                     onClose = {
                         Toast.makeText(
                             context,
@@ -103,11 +108,8 @@ fun ListPage(
                         viewModel.remove(city)
                     },
                     onClick = {
-                        Toast.makeText(
-                            context,
-                            "Cidade selecionada: ${city.name}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        viewModel.city = city.name
+                        viewModel.page = Route.Home
                     }
                 )
             }

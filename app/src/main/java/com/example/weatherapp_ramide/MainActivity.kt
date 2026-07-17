@@ -29,8 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.weatherapp_ramide.ui.CityDialog
 import com.example.weatherapp_ramide.ui.nav.BottomNavBar
@@ -74,9 +72,7 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
     var showDialog by remember { mutableStateOf(false) }
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-    val showAddButton = currentDestination?.hasRoute<Route.List>() == true
+    val showAddButton = viewModel.page == Route.List
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = {}
@@ -132,7 +128,7 @@ fun MainScreen(
                 )
             },
             bottomBar = {
-                BottomNavBar(navController = navController, items = items)
+                BottomNavBar(viewModel = viewModel, navController = navController, items = items)
             },
             floatingActionButton = {
                 if (showAddButton) {
@@ -147,6 +143,17 @@ fun MainScreen(
                     navController = navController,
                     viewModel = viewModel
                 )
+            }
+            LaunchedEffect(viewModel.page) {
+                navController.navigate(viewModel.page) {
+                    navController.graph.startDestinationRoute?.let {
+                        popUpTo(it) {
+                            saveState = true
+                        }
+                        restoreState = true
+                    }
+                    launchSingleTop = true
+                }
             }
         }
     }

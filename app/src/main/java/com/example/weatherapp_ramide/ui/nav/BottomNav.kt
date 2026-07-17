@@ -9,13 +9,11 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.weatherapp_ramide.MainViewModel
 import kotlinx.serialization.Serializable
 
 sealed interface Route {
@@ -40,11 +38,12 @@ sealed class BottomNavItem(
 }
 
 @Composable
-fun BottomNavBar(navController: NavHostController, items: List<BottomNavItem>) {
+fun BottomNavBar(
+    viewModel: MainViewModel,
+    navController: NavHostController,
+    items: List<BottomNavItem>
+) {
     NavigationBar(contentColor = Color.Black) {
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentDestination = navBackStackEntry?.destination
-
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
@@ -52,21 +51,9 @@ fun BottomNavBar(navController: NavHostController, items: List<BottomNavItem>) {
                 },
                 label = { Text(text = item.title, fontSize = 12.sp) },
                 alwaysShowLabel = true,
-                selected = when (item.route) {
-                    Route.Home -> currentDestination?.hasRoute<Route.Home>() == true
-                    Route.List -> currentDestination?.hasRoute<Route.List>() == true
-                    Route.Map -> currentDestination?.hasRoute<Route.Map>() == true
-                },
+                selected = viewModel.page == item.route,
                 onClick = {
-                    navController.navigate(item.route) {
-                        navController.graph.startDestinationRoute?.let { route ->
-                            popUpTo(route) {
-                                saveState = true
-                            }
-                            restoreState = true
-                        }
-                        launchSingleTop = true
-                    }
+                    viewModel.page = item.route
                 }
             )
         }

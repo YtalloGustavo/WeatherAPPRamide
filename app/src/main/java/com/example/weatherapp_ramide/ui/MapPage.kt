@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.example.weatherapp_ramide.MainViewModel
+import com.example.weatherapp_ramide.model.Weather
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -43,10 +44,12 @@ fun MapPage(
     ) {
         viewModel.cities.forEach { city ->
             city.location?.let { location ->
+                val weather = viewModel.weather(city.name)
+                val desc = if (weather == Weather.LOADING) "Carregando clima..." else weather.desc
                 Marker(
                     state = MarkerState(position = location),
                     title = city.name,
-                    snippet = "$location"
+                    snippet = desc
                 )
             }
         }
