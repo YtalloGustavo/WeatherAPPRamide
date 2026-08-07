@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -24,9 +25,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.weatherapp_ramide.MainViewModel
 import com.example.weatherapp_ramide.R
+import com.example.weatherapp_ramide.model.Weather
 import com.example.weatherapp_ramide.model.Forecast
 import java.text.DecimalFormat
 
@@ -53,22 +56,36 @@ fun HomePage(
                 )
             }
         } else {
+            val cities = viewModel.cities.collectAsStateWithLifecycle(emptyMap()).value
+            val cityName = viewModel.city!!
+            val city = cities[cityName]
+            val weather = viewModel.weather.collectAsStateWithLifecycle(emptyMap())
+                .value[cityName]
+            val forecasts = viewModel.forecast.collectAsStateWithLifecycle(emptyMap())
+                .value[cityName]
+
+            LaunchedEffect(cityName) {
+                viewModel.loadForecast(cityName)
+            }
+            LaunchedEffect(cityName) {
+                viewModel.loadWeather(cityName)
+            }
+
             Row {
                 AsyncImage(
-                    model = viewModel.weather(viewModel.city!!).imgUrl,
+                    model = weather?.imgUrl,
                     modifier = modifier.size(140.dp),
                     error = painterResource(id = R.drawable.loading),
                     contentDescription = "Imagem"
                 )
                 Column {
                     Spacer(modifier = modifier.size(12.dp))
-                    val city = viewModel.cities.find { it.name == viewModel.city }
                     val icon = if (city?.isMonitored == true)
                         R.drawable.ic_notifications_filled
                     else R.drawable.ic_notifications_outlined
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = viewModel.city ?: "Selecione uma cidade...",
+                            text = cityName,
                             fontSize = 28.sp
                         )
                         if (city != null) {
@@ -86,8 +103,7 @@ fun HomePage(
                             )
                         }
                     }
-                    viewModel.city?.let { name ->
-                        val weather = viewModel.weather(name)
+                    if (weather != null) {
                         Spacer(modifier = modifier.size(12.dp))
                         Text(
                             text = weather.desc,
@@ -102,9 +118,9 @@ fun HomePage(
                 }
             }
 
-            viewModel.forecast(viewModel.city!!)?.let { forecasts ->
+            forecasts?.let { forecastList ->
                 LazyColumn {
-                    items(items = forecasts, key = { it.date }) { forecast ->
+                    items(items = forecastList, key = { it.date }) { forecast ->
                         ForecastItem(forecast, onClick = { })
                     }
                 }

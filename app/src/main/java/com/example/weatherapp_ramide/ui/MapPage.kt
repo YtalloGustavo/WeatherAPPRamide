@@ -3,12 +3,14 @@ package com.example.weatherapp_ramide.ui
 import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat.getDrawable
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.weatherapp_ramide.MainViewModel
 import com.example.weatherapp_ramide.R
 import com.example.weatherapp_ramide.model.Weather
@@ -38,6 +40,11 @@ fun MapPage(
             android.Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
+    val cities =
+        viewModel.cities.collectAsStateWithLifecycle(emptyMap()).value
+    val weatherMap =
+        viewModel.weather.collectAsStateWithLifecycle(emptyMap()).value
+
     GoogleMap(
         modifier = modifier.fillMaxSize(),
         cameraPositionState = camPosState,
@@ -47,10 +54,19 @@ fun MapPage(
         properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
         uiSettings = MapUiSettings(myLocationButtonEnabled = hasLocationPermission)
     ) {
-        viewModel.cities.forEach { city ->
+        cities.values.forEach { city ->
             if (city.location != null) {
                 val location = city.location!!
-                val weather = viewModel.weather(city.name)
+
+                LaunchedEffect(city.name) {
+                    viewModel.loadWeather(city.name)
+                }
+
+                val weather = weatherMap[city.name] ?: Weather.LOADING
+
+                LaunchedEffect(weather) {
+                    viewModel.loadBitmap(city.name)
+                }
 
                 val image = weather.bitmap
                     ?: getDrawable(context, R.drawable.loading)!!.toBitmap()

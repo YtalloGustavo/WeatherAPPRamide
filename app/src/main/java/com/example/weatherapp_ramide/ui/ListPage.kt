@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.weatherapp_ramide.MainViewModel
 import com.example.weatherapp_ramide.R
@@ -86,7 +88,9 @@ fun ListPage(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier
 ) {
-    val cityList = viewModel.cities
+    val cityMap = viewModel.cities.collectAsStateWithLifecycle(emptyMap()).value
+    val cityList = cityMap.values.toList().sortedBy { it.name }
+    val weatherMap = viewModel.weather.collectAsStateWithLifecycle(emptyMap()).value
     val context = LocalContext.current
 
     Column(
@@ -106,9 +110,15 @@ fun ListPage(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             items(cityList, key = { it.name }) { city ->
+                LaunchedEffect(city.name) {
+                    viewModel.loadWeather(city.name)
+                }
+
+                val weather = weatherMap[city.name] ?: Weather.LOADING
+
                 CityItem(
                     city = city,
-                    weather = viewModel.weather(city.name),
+                    weather = weather,
                     onClose = {
                         Toast.makeText(
                             context,

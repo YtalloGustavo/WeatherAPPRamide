@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
@@ -116,6 +117,7 @@ fun MainScreen(
         onResult = {}
     )
     val context = androidx.compose.ui.platform.LocalContext.current
+    val user = viewModel.user.collectAsStateWithLifecycle(null).value
     val items = listOf(
         BottomNavItem.HomeButton,
         BottomNavItem.ListButton,
@@ -162,7 +164,7 @@ fun MainScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        val name = viewModel.user?.name ?: "[carregando...]"
+                        val name = user?.name ?: "[carregando...]"
                         Text("Bem-vindo/a! $name")
                     },
                     actions = {

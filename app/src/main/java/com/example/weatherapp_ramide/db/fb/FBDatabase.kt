@@ -1,62 +1,50 @@
 package com.example.weatherapp_ramide.db.fb
 
 import android.util.Log
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.firestore
 import com.google.firebase.Firebase
-import com.google.firebase.firestore.DocumentChange
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.emptyFlow
 
 class FBDatabase {
-    interface Listener {
-        fun onUserLoaded(user: FBUser)
-        fun onUserSignOut()
-        fun onCityAdded(city: FBCity)
-        fun onCityUpdated(city: FBCity)
-        fun onCityRemoved(city: FBCity)
-    }
-
     private val auth = Firebase.auth
     private val db = Firebase.firestore
-    private var citiesListReg: ListenerRegistration? = null
-    private var listener: Listener? = null
 
-    init {
-        auth.addAuthStateListener { auth ->
-            if (auth.currentUser == null) {
-                citiesListReg?.remove()
-                listener?.onUserSignOut()
-                return@addAuthStateListener
-            }
-            val refCurrUser = db.collection("users").document(auth.currentUser!!.uid)
-            refCurrUser.get().addOnSuccessListener {
-                it.toObject(FBUser::class.java)?.let { user ->
-                    listener?.onUserLoaded(user)
-                }
-            }.addOnFailureListener { e ->
-                Log.e("FBDatabase", "Erro ao ler usuario", e)
-            }
-            citiesListReg = refCurrUser.collection("cities")
-                .addSnapshotListener { snapshots, ex ->
-                    if (ex != null) {
-                        Log.e("FBDatabase", "Error listening to cities", ex)
-                        return@addSnapshotListener
-                    }
-                    snapshots?.documentChanges?.forEach { change ->
-                        val fbCity = change.document.toObject(FBCity::class.java)
-                        when (change.type) {
-                            DocumentChange.Type.ADDED -> listener?.onCityAdded(fbCity)
-                            DocumentChange.Type.MODIFIED -> listener?.onCityUpdated(fbCity)
-                            DocumentChange.Type.REMOVED -> listener?.onCityRemoved(fbCity)
+    val user: Flow<FBUser>
+        get() {
+            val uid = auth.currentUser?.uid ?: return emptyFlow()
+            return callbackFlow {
+                val listener = db.collection("users").document(uid)
+                    .addSnapshotListener { doc, error ->
+                        if (error != null) {
+                            Log.e("FBDatabase", "Erro ao ler usuario", error)
+                            return@addSnapshotListener
                         }
+                        doc?.toObject(FBUser::class.java)?.let { trySend(it) }
                     }
-                }
+                awaitClose { listener.remove() }
+            }
         }
-    }
 
-    fun setListener(listener: Listener? = null) {
-        this.listener = listener
-    }
+    val cities: Flow<List<FBCity>>
+        get() {
+            val uid = auth.currentUser?.uid ?: return emptyFlow()
+            return callbackFlow {
+                val listener = db.collection("users").document(uid)
+                    .collection("cities")
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            Log.e("FBDatabase", "Error listening to cities", error)
+                            return@addSnapshotListener
+                        }
+                        snapshot?.let { trySend(it.toObjects(FBCity::class.java)) }
+                    }
+                awaitClose { listener.remove() }
+            }
+        }
 
     fun register(user: FBUser) {
         val uid = auth.currentUser?.uid ?: run {
