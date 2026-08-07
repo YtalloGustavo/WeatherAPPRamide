@@ -19,7 +19,7 @@ class ForecastMonitor(context: Context) {
         if (!city.isMonitored) return
         val inputData = workDataOf("city" to city.name)
         val request = PeriodicWorkRequestBuilder<ForecastWorker>(
-            repeatInterval = 15, repeatIntervalTimeUnit = TimeUnit.MINUTES
+            repeatInterval = 1, repeatIntervalTimeUnit = TimeUnit.MINUTES
         ).setInitialDelay(
             duration = 10, timeUnit = TimeUnit.SECONDS
         ).setInputData(inputData).build()

@@ -39,6 +39,15 @@ import com.google.firebase.auth.auth
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Firebase.auth.currentUser != null) {
+            startActivity(
+                Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+            )
+            finish()
+            return
+        }
         setContent {
             WeatherAPPRamideTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -109,12 +118,16 @@ fun LoginPage(modifier: Modifier = Modifier) {
                     activity?.let {
                         Firebase.auth.signInWithEmailAndPassword(email, password)
                             .addOnCompleteListener(it) { task ->
-                                val message = if (task.isSuccessful) {
-                                    "Login OK!"
+                                if (task.isSuccessful) {
+                                    activity.startActivity(
+                                        Intent(activity, MainActivity::class.java).apply {
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                                                Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                        }
+                                    )
                                 } else {
-                                    "Login FALHOU!"
+                                    Toast.makeText(context, "Login FALHOU!", Toast.LENGTH_LONG).show()
                                 }
-                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                             }
                     }
                 },

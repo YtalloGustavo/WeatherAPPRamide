@@ -33,6 +33,8 @@ class FBDatabase {
                 it.toObject(FBUser::class.java)?.let { user ->
                     listener?.onUserLoaded(user)
                 }
+            }.addOnFailureListener { e ->
+                Log.e("FBDatabase", "Erro ao ler usuario", e)
             }
             citiesListReg = refCurrUser.collection("cities")
                 .addSnapshotListener { snapshots, ex ->
@@ -75,6 +77,7 @@ class FBDatabase {
         }
         db.collection("users").document(uid).collection("cities")
             .document(city.name!!).set(city)
+            .addOnFailureListener { e -> Log.e("FBDatabase", "Erro ao adicionar cidade", e) }
     }
 
     fun remove(city: FBCity) {
@@ -88,6 +91,7 @@ class FBDatabase {
         }
         db.collection("users").document(uid).collection("cities")
             .document(city.name!!).delete()
+            .addOnFailureListener { e -> Log.e("FBDatabase", "Erro ao remover cidade", e) }
     }
 
     fun update(city: FBCity) {

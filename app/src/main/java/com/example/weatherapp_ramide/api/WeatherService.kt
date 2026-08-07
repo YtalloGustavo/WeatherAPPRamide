@@ -6,11 +6,14 @@ import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import coil.ImageLoader
 import coil.request.ImageRequest
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 class WeatherService(private val context: Context) {
     private var weatherAPI: WeatherServiceAPI
@@ -19,7 +22,16 @@ class WeatherService(private val context: Context) {
         .allowHardware(false).build()
 
     init {
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+        val client = OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
         val retrofitAPI = Retrofit.Builder().baseUrl(WeatherServiceAPI.BASE_URL)
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create()).build()
         weatherAPI = retrofitAPI.create(WeatherServiceAPI::class.java)
     }

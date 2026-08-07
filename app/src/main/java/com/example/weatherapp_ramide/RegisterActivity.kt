@@ -1,6 +1,7 @@
 package com.example.weatherapp_ramide
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -131,17 +132,19 @@ fun RegisterPage(modifier: Modifier = Modifier) {
                     activity?.let {
                         Firebase.auth.createUserWithEmailAndPassword(email, password)
                             .addOnCompleteListener(it) { task ->
-                                val message = if (task.isSuccessful) {
+                                if (task.isSuccessful) {
                                     try {
                                         FBDatabase().register(User(name, email).toFBUser())
-                                        "Registro OK!"
-                                    } catch (e: Exception) {
-                                        "Erro ao salvar no banco!"
-                                    }
+                                    } catch (_: Exception) { }
+                                    activity.startActivity(
+                                        Intent(activity, MainActivity::class.java).apply {
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                                                Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                        }
+                                    )
                                 } else {
-                                    "Registro FALHOU!"
+                                    Toast.makeText(context, "Registro FALHOU!", Toast.LENGTH_LONG).show()
                                 }
-                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                             }
                     }
                 },

@@ -1,6 +1,7 @@
 package com.example.weatherapp_ramide
 
 import android.os.Bundle
+import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -68,7 +69,15 @@ class MainActivity : ComponentActivity() {
             }
             MainScreen(
                 viewModel = viewModel,
-                onExit = { Firebase.auth.signOut() }
+                onExit = {
+                    Firebase.auth.signOut()
+                    startActivity(
+                        Intent(this@MainActivity, LoginActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                                Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                    )
+                }
             )
         }
     }
