@@ -49,7 +49,25 @@ class MainActivity : ComponentActivity() {
             Log.e("MainActivity", "Falha ao inicializar o Google Maps.", exception)
         }
         setContent {
+            val uid = Firebase.auth.currentUser?.uid ?: run {
+                Firebase.auth.signOut()
+                startActivity(
+                    Intent(this@MainActivity, LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                )
+                return@setContent
+            }
             val fbDB = remember { com.example.weatherapp_ramide.db.fb.FBDatabase() }
+            val localDB = remember {
+                com.example.weatherapp_ramide.db.local.LocalDatabase(
+                    this@MainActivity, "weatherdb_$uid"
+                )
+            }
+            val repo = remember {
+                com.example.weatherapp_ramide.repo.Repository(fbDB, localDB)
+            }
             val weatherService = remember {
                 com.example.weatherapp_ramide.api.WeatherService(this@MainActivity)
             }
@@ -57,7 +75,7 @@ class MainActivity : ComponentActivity() {
                 com.example.weatherapp_ramide.monitor.ForecastMonitor(this@MainActivity)
             }
             val viewModel: MainViewModel = viewModel(
-                factory = MainViewModelFactory(fbDB, weatherService, monitor)
+                factory = MainViewModelFactory(repo, weatherService, monitor)
             )
             DisposableEffect(Unit) {
                 val listener = androidx.core.util.Consumer<android.content.Intent> { intent ->
@@ -202,7 +220,10 @@ fun MainScreenPreview() {
     val context = androidx.compose.ui.platform.LocalContext.current
     MainScreen(
         viewModel = MainViewModel(
-            com.example.weatherapp_ramide.db.fb.FBDatabase(),
+            com.example.weatherapp_ramide.repo.Repository(
+                com.example.weatherapp_ramide.db.fb.FBDatabase(),
+                com.example.weatherapp_ramide.db.local.LocalDatabase(context, "preview")
+            ),
             com.example.weatherapp_ramide.api.WeatherService(context),
             com.example.weatherapp_ramide.monitor.ForecastMonitor(context)
         ),
