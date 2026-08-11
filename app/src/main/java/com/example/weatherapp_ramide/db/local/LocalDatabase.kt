@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.room.Room
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.io.Closeable
 
-class LocalDatabase(context: Context, databaseName: String) {
+class LocalDatabase(context: Context, databaseName: String) : Closeable {
     private var roomDB: LocalRoomDatabase = Room.databaseBuilder(
-        context = context,
+        context = context.applicationContext,
         klass = LocalRoomDatabase::class.java,
         name = databaseName
     ).build()
@@ -28,4 +30,9 @@ class LocalDatabase(context: Context, databaseName: String) {
     }
 
     fun getCities() = roomDB.localCityDao().getCities()
+
+    override fun close() {
+        scope.cancel()
+        roomDB.close()
+    }
 }

@@ -9,13 +9,15 @@ import com.example.weatherapp_ramide.model.City
 import com.example.weatherapp_ramide.model.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.io.Closeable
 
 class Repository(
     private val fbDB: FBDatabase,
     private val localDB: LocalDatabase
-) {
+) : Closeable {
     private var ioScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
     private var cityMap = emptyMap<String, City>()
 
@@ -49,4 +51,9 @@ class Repository(
     fun remove(city: City) = fbDB.remove(city.toFBCity())
 
     fun update(city: City) = fbDB.update(city.toFBCity())
+
+    override fun close() {
+        ioScope.cancel()
+        localDB.close()
+    }
 }
